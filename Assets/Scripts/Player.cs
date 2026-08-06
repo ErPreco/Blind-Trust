@@ -18,12 +18,17 @@ public class Player : NetworkBehaviour
     private float skinWidth = .03f;
     [SerializeField]
     private LayerMask groundLayer;
+    [SerializeField]
+    private Transform cinemachineCamera;
+    [SerializeField, Range(0.03f, 0.1f)]
+    private float playerRotateDampening = 0.06f;
 
     private Rigidbody rb;
     private new CapsuleCollider collider;
     private float coyoteJumpTimer;
     private float jumpBufferTimer;
     private float colliderRadius;
+    private Quaternion lastRotation;
 
     void Awake()
     {
@@ -76,10 +81,23 @@ public class Player : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        Vector2 inputVelocity = GameInput.Instance.GetMovementDirection() * speed;
-        Vector3 velocity = new Vector3(inputVelocity.x, rb.linearVelocity.y, inputVelocity.y);
+        Vector2 inputDirection = GameInput.Instance.GetMovementDirection();
+        if (inputDirection.magnitude >= 0.05f)
+        {
+            float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.y) * Mathf.Rad2Deg + cinemachineCamera.eulerAngles.y;
+            float _ = 0;
+            float smoothTargetAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _, playerRotateDampening);
 
-        rb.linearVelocity = velocity;
+            transform.rotation = lastRotation = Quaternion.Euler(0, smoothTargetAngle, 0);
+
+            Vector3 movementVector = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward * speed;
+            movementVector.y = rb.linearVelocity.y;
+            rb.linearVelocity = movementVector;
+        }
+        else
+        {
+            transform.rotation = lastRotation;
+        }
     }
 
     private void Jump_Performed(object _sender, EventArgs _event)
