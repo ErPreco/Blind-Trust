@@ -475,7 +475,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
   ShowTopMostFoldoutHeaderGroup: 1
-  speed: 8
+  speed: 6
   jumpHeight: 3
   coyoteJumpTime: 0.05
   jumpBufferTime: 0.1
