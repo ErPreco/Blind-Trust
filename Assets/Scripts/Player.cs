@@ -1,3 +1,4 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -18,7 +19,6 @@ public class Player : NetworkBehaviour
     [SerializeField]
     private LayerMask groundLayer;
 
-    private InputSystem inputSystem;
     private Rigidbody rb;
     private new CapsuleCollider collider;
     private float coyoteJumpTimer;
@@ -33,9 +33,7 @@ public class Player : NetworkBehaviour
 
     void OnEnable()
     {
-        inputSystem = new InputSystem();
-        inputSystem.Player.Enable();
-        inputSystem.Player.Jump.performed += Jump_Performed;
+        GameInput.Instance.OnJumpPerformed += Jump_Performed;
     }
 
     void Start()
@@ -78,13 +76,13 @@ public class Player : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        Vector2 inputVector = inputSystem.Player.Move.ReadValue<Vector2>();
-        Vector3 velocity = new Vector3(inputVector.x * speed, rb.linearVelocity.y, inputVector.y * speed);
+        Vector2 inputVelocity = GameInput.Instance.GetMovementDirection() * speed;
+        Vector3 velocity = new Vector3(inputVelocity.x, rb.linearVelocity.y, inputVelocity.y);
 
         rb.linearVelocity = velocity;
     }
 
-    private void Jump_Performed(UnityEngine.InputSystem.InputAction.CallbackContext _context)
+    private void Jump_Performed(object _sender, EventArgs _event)
     {
         jumpBufferTimer = jumpBufferTime;
     }
@@ -97,7 +95,6 @@ public class Player : NetworkBehaviour
 
     void OnDisable()
     {
-        inputSystem.Player.Jump.performed -= Jump_Performed;
-        inputSystem.Player.Disable();
+        GameInput.Instance.OnJumpPerformed -= Jump_Performed;
     }
 }
