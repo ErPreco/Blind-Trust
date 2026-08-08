@@ -9,13 +9,13 @@ public class Agent : NetworkBehaviour
     [SerializeField]
     private float jumpHeight = 3;
     [SerializeField, Range(0.01f, 0.1f)]
-    private float coyoteJumpTime = .05f;
+    private float coyoteJumpTime = 0.05f;
     [SerializeField, Range(0.05f, 0.2f)]
-    private float jumpBufferTime = .1f;
+    private float jumpBufferTime = 0.1f;
     [SerializeField]
     private float gravityScale = 1;
     [SerializeField, Range(0.01f, 0.05f)]
-    private float skinWidth = .03f;
+    private float skinWidth = 0.03f;
     [SerializeField]
     private LayerMask groundLayer;
     [SerializeField]
@@ -87,7 +87,7 @@ public class Agent : NetworkBehaviour
                 isMovementRequestSent = true;
 
                 // Send the request to the other player
-                MovementRequestRpc(NetworkManager.Singleton.LocalClientId);
+                RequestMovementRpc();
             }
         }
         else if (isMovementRequestSent)
@@ -98,7 +98,16 @@ public class Agent : NetworkBehaviour
             ReleaseMovementRpc();
         }
 
-        if (!canMove) return;
+        if (!canMove)
+        {
+            if (IsOwner)
+            {
+                // Makes the agent stop spinning after control is released
+                transform.rotation = lastRotation;
+            }
+
+            return;
+        }
 
         if (inputDirection.magnitude >= ignoreInputDirectionMagnitudeThreshold)
         {
@@ -112,42 +121,31 @@ public class Agent : NetworkBehaviour
             movementVector.y = rb.linearVelocity.y;
             rb.linearVelocity = movementVector;
         }
-        else
-        {
-            transform.rotation = lastRotation;
-        }
     }
 
     private void Jump_Performed(object _sender, EventArgs _event)
     {
         if (isMovementHandledByOtherClient) return;
 
-        jumpBufferTimer = jumpBufferTime;
+        RequestJumpRpc(NetworkManager.Singleton.LocalClientId);
     }
 
     [Rpc(SendTo.NotMe)]
-    private void MovementRequestRpc(ulong _ownerId)
+    private void RequestMovementRpc()
     {
         // The other player is requesting to move the agent, so acknowledge it
         // TODO: If IsClient and isMovementRequestSent, drop my request and ack this one
 
         isMovementHandledByOtherClient = true;
-        if (IsServer)
-        {
-            networkObject.ChangeOwnership(_ownerId);
-        }
 
-        MovementRequestAckRpc();
+        RequestMovementAckRpc();
     }
 
     [Rpc(SendTo.NotMe)]
-    private void MovementRequestAckRpc()
+    private void RequestMovementAckRpc()
     {
         // The other player acknowledged the request, so allow control on agent
-        if (IsServer)
-        {
-            networkObject.ChangeOwnership(NetworkManager.Singleton.LocalClientId);
-        }
+        ChangeOwnershipToLocalClientRpc(NetworkManager.Singleton.LocalClientId);
         canMove = true;
     }
 
@@ -155,6 +153,26 @@ public class Agent : NetworkBehaviour
     private void ReleaseMovementRpc()
     {
         isMovementHandledByOtherClient = false;
+    }
+
+    [Rpc(SendTo.Server)]
+    private void RequestJumpRpc(ulong _ownerId)
+    {
+        ChangeOwnershipToLocalClientRpc(_ownerId);
+
+        RequestJumpAckRpc(RpcTarget.Single(_ownerId, RpcTargetUse.Temp));
+    }
+
+    [Rpc(SendTo.SpecifiedInParams)]
+    private void RequestJumpAckRpc(RpcParams _rpcParams)
+    {
+        jumpBufferTimer = jumpBufferTime;
+    }
+
+    [Rpc(SendTo.Server)]
+    private void ChangeOwnershipToLocalClientRpc(ulong _ownerId)
+    {
+        networkObject.ChangeOwnership(_ownerId);
     }
 
     private bool IsOnObjectWithLayerMask(LayerMask _layerMask)

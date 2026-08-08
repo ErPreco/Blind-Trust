@@ -265,7 +265,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkRigidbodyBaseExpanded: 0
-  UseRigidBodyForMotion: 1
+  UseRigidBodyForMotion: 0
   AutoUpdateKinematicState: 0
   AutoSetKinematicOnDespawn: 1
 --- !u!114 &4074354153951698556
@@ -282,10 +282,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Agent
   ShowTopMostFoldoutHeaderGroup: 1
   speed: 6
-  jumpHeight: 8
+  jumpHeight: 3
   coyoteJumpTime: 0.05
   jumpBufferTime: 0.1
-  gravityScale: 2
+  gravityScale: 3
   skinWidth: 0.03
   groundLayer:
     serializedVersion: 2
