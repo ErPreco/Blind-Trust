@@ -5,7 +5,9 @@ using UnityEngine;
 public class Agent : NetworkBehaviour
 {
     [SerializeField]
-    private float speed = 8;
+    private float walkSpeed = 8;
+    [SerializeField, Range(3, 6)]
+    private float turningSpeed = 5;
     [SerializeField]
     private float jumpHeight = 3;
     [SerializeField, Range(0.01f, 0.1f)]
@@ -13,15 +15,11 @@ public class Agent : NetworkBehaviour
     [SerializeField, Range(0.05f, 0.2f)]
     private float jumpBufferTime = 0.1f;
     [SerializeField]
-    private float gravityScale = 1;
-    [SerializeField, Range(0.01f, 0.05f)]
-    private float skinWidth = 0.03f;
+    private float gravityScale = 3;
     [SerializeField]
     private LayerMask groundLayer;
     [SerializeField]
     private Transform cinemachineCamera;
-    [SerializeField, Range(0.03f, 0.1f)]
-    private float playerRotateDampening = 0.06f;
 
     enum MovementHandler
     {
@@ -32,14 +30,15 @@ public class Agent : NetworkBehaviour
     private NetworkVariable<MovementHandler> movementHandler = new(MovementHandler.None);
 
     private NetworkObject networkObject;
-    private Rigidbody rb;
-    private CapsuleCollider capsuleCollider;
+    private CharacterController characterController;
     private bool canMove;
     private bool isMovementRequestSent;
+    private float gravityMagnitude;
+    private float verticalVelocity;
+    private float jumpVelocity;
+    private bool overrideVerticalVelocity;
     private float coyoteJumpTimer;
     private float jumpBufferTimer;
-    private float colliderRadius;
-    private Quaternion lastRotation;
 
     void OnEnable()
     {
@@ -49,85 +48,17 @@ public class Agent : NetworkBehaviour
     void Start()
     {
         networkObject = GetComponent<NetworkObject>();
-        rb = GetComponent<Rigidbody>();
-        capsuleCollider = GetComponent<CapsuleCollider>();
+        characterController = GetComponent<CharacterController>();
 
-        Physics.gravity *= gravityScale;
-        colliderRadius = capsuleCollider.radius;
+        gravityMagnitude = Physics.gravity.y * gravityScale * -1;
+        jumpVelocity = Mathf.Sqrt(jumpHeight * gravityMagnitude * 2);
     }
 
     void Update()
     {
-        if (IsGrounded())
-        {
-            coyoteJumpTimer = coyoteJumpTime;
-        }
-        else
-        {
-            coyoteJumpTimer -= Time.deltaTime;
-        }
-        jumpBufferTimer -= Time.deltaTime;
-
-        if (coyoteJumpTimer > 0 && jumpBufferTimer > 0)
-        {
-            // Safety check
-            if (IsMovementHandlerOtherClient()) return;
-
-            RequestJumpRpc(NetworkManager.Singleton.LocalClientId);
-
-            jumpBufferTimer = 0;
-        }
-    }
-
-    void FixedUpdate()
-    {
-        Vector2 inputDirection = GameInput.Instance.GetMovementDirection();
-
-        float ignoreInputDirectionMagnitudeThreshold = 0.01f;
-        if (inputDirection.magnitude >= ignoreInputDirectionMagnitudeThreshold)
-        {
-            // The player is trying to move the agent
-            if (movementHandler.Value == MovementHandler.None && !isMovementRequestSent)
-            {
-                // The agent is standstill (the other player is not controlling it),
-                // and it is the first attempt to move
-                isMovementRequestSent = true;
-
-                // Send the request to the other player
-                RequestMovementRpc();
-            }
-        }
-        else if (isMovementRequestSent)
-        {
-            // The player has just released the agent control, so notify the other player
-            isMovementRequestSent = false;
-            canMove = false;
-            ReleaseMovementRpc();
-        }
-
-        if (!canMove)
-        {
-            if (IsOwner)
-            {
-                // Makes the agent stop spinning after control is released
-                transform.rotation = lastRotation;
-            }
-
-            return;
-        }
-
-        if (inputDirection.magnitude >= ignoreInputDirectionMagnitudeThreshold)
-        {
-            float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.y) * Mathf.Rad2Deg + cinemachineCamera.eulerAngles.y;
-            float _ = 0;
-            float smoothTargetAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _, playerRotateDampening);
-
-            transform.rotation = lastRotation = Quaternion.Euler(0, smoothTargetAngle, 0);
-
-            Vector3 movementVector = (Quaternion.Euler(0, targetAngle, 0) * Vector3.forward).normalized * speed;
-            movementVector.y = rb.linearVelocity.y;
-            rb.linearVelocity = movementVector;
-        }
+        CheckJump();
+        Movement();
+        Turn();
     }
 
     private void Jump_Performed(object _sender, EventArgs _event)
@@ -172,10 +103,7 @@ public class Agent : NetworkBehaviour
     [Rpc(SendTo.SpecifiedInParams)]
     private void RequestJumpAckRpc(RpcParams _rpcParams)
     {
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0);
-
-        float jumpForce = Mathf.Sqrt(-2 * Physics.gravity.y * jumpHeight) - (Time.deltaTime * Physics.gravity.y * .5f);
-        rb.AddForce(new Vector2(0, jumpForce), ForceMode.VelocityChange);
+        overrideVerticalVelocity = true;
     }
 
     [Rpc(SendTo.Server)]
@@ -188,16 +116,114 @@ public class Agent : NetworkBehaviour
         }
     }
 
-    private bool IsMovementHandlerOtherClient()
+    private void CheckJump()
     {
-        return (IsHost && movementHandler.Value == MovementHandler.Client) ||
-            (IsClient && !IsHost && movementHandler.Value == MovementHandler.Host);
+        if (IsGrounded())
+        {
+            coyoteJumpTimer = coyoteJumpTime;
+        }
+        else
+        {
+            coyoteJumpTimer -= Time.deltaTime;
+        }
+        jumpBufferTimer -= Time.deltaTime;
+
+        if (coyoteJumpTimer > 0 && jumpBufferTimer > 0)
+        {
+            if (IsMovementHandlerOtherClient()) return;
+
+            RequestJumpRpc(NetworkManager.Singleton.LocalClientId);
+
+            jumpBufferTimer = 0;
+        }
+    }
+
+    private void Movement()
+    {
+        Vector3 inputDirection = GameInput.Instance.GetMovementDirection();
+
+        // float ignoreInputDirectionMagnitudeThreshold = 0.01f;
+        if (inputDirection.magnitude > 0)
+        {
+            // The player is trying to move the agent
+            if (movementHandler.Value == MovementHandler.None && !isMovementRequestSent)
+            {
+                // The agent is standstill (the other player is not controlling it),
+                // and it is the first attempt to move
+                isMovementRequestSent = true;
+
+                // Send the request to the other player
+                RequestMovementRpc();
+            }
+        }
+        else if (isMovementRequestSent)
+        {
+            // The player has just released the agent control, so notify the other player
+            isMovementRequestSent = false;
+            canMove = false;
+            ReleaseMovementRpc();
+        }
+
+        Vector3 movementVector = Vector3.zero;
+        if (canMove)
+        {
+            movementVector = cinemachineCamera.TransformDirection(inputDirection);
+            movementVector *= walkSpeed;
+        }
+
+        movementVector.y = VerticalForceCalculation();
+        characterController.Move(movementVector * Time.deltaTime);
+    }
+
+    private void Turn()
+    {
+        if (GameInput.Instance.GetMovementDirection().magnitude > 0)
+        {
+            Vector3 currentLookDirection = characterController.velocity.normalized;
+            currentLookDirection.y = 0;
+
+            currentLookDirection.Normalize();
+
+            if (currentLookDirection.magnitude > 0)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(currentLookDirection);
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, turningSpeed * Time.deltaTime);
+            }
+        }
+    }
+
+    private float VerticalForceCalculation()
+    {
+        if (overrideVerticalVelocity)
+        {
+            overrideVerticalVelocity = false;
+            verticalVelocity = jumpVelocity;
+            return jumpVelocity;
+        }
+
+        if (IsGrounded() && verticalVelocity < 0)
+        {
+            verticalVelocity = -1;
+        }
+        else
+        {
+            verticalVelocity -= gravityMagnitude * Time.deltaTime;
+        }
+
+        return verticalVelocity;
     }
 
     private bool IsGrounded()
     {
-        Vector3 halfExtents = new(colliderRadius, (skinWidth + 0.01f) * 2, colliderRadius);
+        Vector3 halfExtents = new(characterController.radius, (characterController.skinWidth + 0.01f) * 2, characterController.radius);
         return Physics.CheckBox(transform.position, halfExtents, Quaternion.identity, groundLayer);
+    }
+
+    private bool IsMovementHandlerOtherClient()
+    {
+        return (IsHost && movementHandler.Value == MovementHandler.Client) ||
+            (IsClient && !IsHost && movementHandler.Value == MovementHandler.Host);
     }
 
     void OnDisable()

@@ -1009,7 +1009,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   ShowTopMostFoldoutHeaderGroup: 1
-  agentPrefab: {fileID: 7085296745141877696, guid: a7ecd1c839aa5be4a934859174a668c7, type: 3}
+  agentPrefab: {fileID: 2548399519355260178, guid: 745105a282274fe4baa68d302dd2d15f, type: 3}
   menuUI: {fileID: 3121780}
 --- !u!114 &889406961
 MonoBehaviour:

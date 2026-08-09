@@ -36,9 +36,10 @@ public class GameInput : MonoBehaviour
         OnJumpPerformed?.Invoke(this, EventArgs.Empty);
     }
 
-    public Vector2 GetMovementDirection()
+    public Vector3 GetMovementDirection()
     {
-        return inputActions.Player.Move.ReadValue<Vector2>();
+        Vector2 inputDirection = inputActions.Player.Move.ReadValue<Vector2>();
+        return new(inputDirection.x, 0, inputDirection.y);
     }
 
     void OnDisable()
