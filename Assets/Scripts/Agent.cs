@@ -23,12 +23,19 @@ public class Agent : NetworkBehaviour
     [SerializeField, Range(0.03f, 0.1f)]
     private float playerRotateDampening = 0.06f;
 
+    enum MovementHandler
+    {
+        None,
+        Host,
+        Client
+    }
+    private NetworkVariable<MovementHandler> movementHandler = new(MovementHandler.None);
+
     private NetworkObject networkObject;
     private Rigidbody rb;
     private CapsuleCollider capsuleCollider;
     private bool canMove;
     private bool isMovementRequestSent;
-    private bool isMovementHandledByOtherClient;
     private float coyoteJumpTimer;
     private float jumpBufferTimer;
     private float colliderRadius;
@@ -51,7 +58,7 @@ public class Agent : NetworkBehaviour
 
     void Update()
     {
-        if (IsOnObjectWithLayerMask(groundLayer))
+        if (IsGrounded())
         {
             coyoteJumpTimer = coyoteJumpTime;
         }
@@ -63,10 +70,10 @@ public class Agent : NetworkBehaviour
 
         if (coyoteJumpTimer > 0 && jumpBufferTimer > 0)
         {
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0);
+            // Safety check
+            if (IsMovementHandlerOtherClient()) return;
 
-            float jumpForce = Mathf.Sqrt(-2 * Physics.gravity.y * jumpHeight) - (Time.deltaTime * Physics.gravity.y * .5f);
-            rb.AddForce(new Vector2(0, jumpForce), ForceMode.VelocityChange);
+            RequestJumpRpc(NetworkManager.Singleton.LocalClientId);
 
             jumpBufferTimer = 0;
         }
@@ -80,7 +87,7 @@ public class Agent : NetworkBehaviour
         if (inputDirection.magnitude >= ignoreInputDirectionMagnitudeThreshold)
         {
             // The player is trying to move the agent
-            if (!isMovementHandledByOtherClient && !isMovementRequestSent)
+            if (movementHandler.Value == MovementHandler.None && !isMovementRequestSent)
             {
                 // The agent is standstill (the other player is not controlling it),
                 // and it is the first attempt to move
@@ -125,9 +132,9 @@ public class Agent : NetworkBehaviour
 
     private void Jump_Performed(object _sender, EventArgs _event)
     {
-        if (isMovementHandledByOtherClient) return;
+        if (IsMovementHandlerOtherClient()) return;
 
-        RequestJumpRpc(NetworkManager.Singleton.LocalClientId);
+        jumpBufferTimer = jumpBufferTime;
     }
 
     [Rpc(SendTo.NotMe)]
@@ -136,8 +143,6 @@ public class Agent : NetworkBehaviour
         // The other player is requesting to move the agent, so acknowledge it
         // TODO: If IsClient and isMovementRequestSent, drop my request and ack this one
 
-        isMovementHandledByOtherClient = true;
-
         RequestMovementAckRpc();
     }
 
@@ -145,20 +150,21 @@ public class Agent : NetworkBehaviour
     private void RequestMovementAckRpc()
     {
         // The other player acknowledged the request, so allow control on agent
-        ChangeOwnershipToLocalClientRpc(NetworkManager.Singleton.LocalClientId);
+        ChangeOwnershipRpc(NetworkManager.Singleton.LocalClientId, true);
+
         canMove = true;
     }
 
-    [Rpc(SendTo.NotMe)]
+    [Rpc(SendTo.Server)]
     private void ReleaseMovementRpc()
     {
-        isMovementHandledByOtherClient = false;
+        movementHandler.Value = MovementHandler.None;
     }
 
     [Rpc(SendTo.Server)]
     private void RequestJumpRpc(ulong _ownerId)
     {
-        ChangeOwnershipToLocalClientRpc(_ownerId);
+        ChangeOwnershipRpc(_ownerId, false);
 
         RequestJumpAckRpc(RpcTarget.Single(_ownerId, RpcTargetUse.Temp));
     }
@@ -166,19 +172,32 @@ public class Agent : NetworkBehaviour
     [Rpc(SendTo.SpecifiedInParams)]
     private void RequestJumpAckRpc(RpcParams _rpcParams)
     {
-        jumpBufferTimer = jumpBufferTime;
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0);
+
+        float jumpForce = Mathf.Sqrt(-2 * Physics.gravity.y * jumpHeight) - (Time.deltaTime * Physics.gravity.y * .5f);
+        rb.AddForce(new Vector2(0, jumpForce), ForceMode.VelocityChange);
     }
 
     [Rpc(SendTo.Server)]
-    private void ChangeOwnershipToLocalClientRpc(ulong _ownerId)
+    private void ChangeOwnershipRpc(ulong _ownerId, bool _setMovementHandler)
     {
         networkObject.ChangeOwnership(_ownerId);
+        if (_setMovementHandler)
+        {
+            movementHandler.Value = (_ownerId == NetworkManager.Singleton.LocalClientId) ? MovementHandler.Host : MovementHandler.Client;
+        }
     }
 
-    private bool IsOnObjectWithLayerMask(LayerMask _layerMask)
+    private bool IsMovementHandlerOtherClient()
+    {
+        return (IsHost && movementHandler.Value == MovementHandler.Client) ||
+            (IsClient && !IsHost && movementHandler.Value == MovementHandler.Host);
+    }
+
+    private bool IsGrounded()
     {
         Vector3 halfExtents = new(colliderRadius, (skinWidth + 0.01f) * 2, colliderRadius);
-        return Physics.CheckBox(transform.position, halfExtents, Quaternion.identity, _layerMask);
+        return Physics.CheckBox(transform.position, halfExtents, Quaternion.identity, groundLayer);
     }
 
     void OnDisable()

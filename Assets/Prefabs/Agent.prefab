@@ -282,7 +282,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Agent
   ShowTopMostFoldoutHeaderGroup: 1
   speed: 6
-  jumpHeight: 3
+  jumpHeight: 10
   coyoteJumpTime: 0.05
   jumpBufferTime: 0.1
   gravityScale: 3
