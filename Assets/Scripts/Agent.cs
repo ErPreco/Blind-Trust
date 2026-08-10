@@ -56,7 +56,6 @@ public class Agent : NetworkBehaviour
 
     void Update()
     {
-        print(verticalVelocity);
         CheckJump();
         Movement();
         Turn();
@@ -72,8 +71,8 @@ public class Agent : NetworkBehaviour
     [Rpc(SendTo.NotMe)]
     private void RequestMovementRpc()
     {
-        // The other player is requesting to move the agent, so acknowledge it
-        // TODO: If IsClient and isMovementRequestSent, drop my request and ack this one
+        // If the host sent a request, but in the meanwhile it receives a request from the client, drop it
+        if (IsHost && isMovementRequestSent) return;
 
         RequestMovementAckRpc();
     }
