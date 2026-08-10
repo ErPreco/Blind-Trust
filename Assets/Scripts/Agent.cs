@@ -56,6 +56,7 @@ public class Agent : NetworkBehaviour
 
     void Update()
     {
+        print(verticalVelocity);
         CheckJump();
         Movement();
         Turn();
@@ -97,11 +98,11 @@ public class Agent : NetworkBehaviour
     {
         ChangeOwnershipRpc(_ownerId, false);
 
-        RequestJumpAckRpc(RpcTarget.Single(_ownerId, RpcTargetUse.Temp));
+        PerformJumpRpc();
     }
 
-    [Rpc(SendTo.SpecifiedInParams)]
-    private void RequestJumpAckRpc(RpcParams _rpcParams)
+    [Rpc(SendTo.Everyone)]
+    private void PerformJumpRpc()
     {
         overrideVerticalVelocity = true;
     }
@@ -141,8 +142,6 @@ public class Agent : NetworkBehaviour
     private void Movement()
     {
         Vector3 inputDirection = GameInput.Instance.GetMovementDirection();
-
-        // float ignoreInputDirectionMagnitudeThreshold = 0.01f;
         if (inputDirection.magnitude > 0)
         {
             // The player is trying to move the agent
