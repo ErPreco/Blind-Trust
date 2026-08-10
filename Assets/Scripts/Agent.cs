@@ -2,10 +2,17 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 
+// Good basic CharacterController setup
+// https://youtu.be/i5NVbu7rQJE?si=p5PPyCKXyp_hkwd9
+
 public class Agent : NetworkBehaviour
 {
     [SerializeField]
-    private float walkSpeed = 8;
+    private float walkSpeed = 6;
+    [SerializeField]
+    private float sprintSpeed = 12;
+    [SerializeField]
+    private float sprintTransitSpeed = 7;
     [SerializeField, Range(3, 6)]
     private float turningSpeed = 5;
     [SerializeField]
@@ -34,6 +41,7 @@ public class Agent : NetworkBehaviour
     private bool canMove;
     private bool isMovementRequestSent;
     private float gravityMagnitude;
+    private float speed;
     private float verticalVelocity;
     private float jumpVelocity;
     private bool overrideVerticalVelocity;
@@ -140,7 +148,7 @@ public class Agent : NetworkBehaviour
 
     private void Movement()
     {
-        Vector3 inputDirection = GameInput.Instance.GetMovementDirection();
+        Vector3 inputDirection = GameInput.Instance.MovementDirection;
         if (inputDirection.magnitude > 0)
         {
             // The player is trying to move the agent
@@ -166,7 +174,17 @@ public class Agent : NetworkBehaviour
         if (canMove)
         {
             movementVector = cinemachineCamera.TransformDirection(inputDirection);
-            movementVector *= walkSpeed;
+
+            if (GameInput.Instance.IsSprinting)
+            {
+                speed = Mathf.Lerp(speed, sprintSpeed, sprintTransitSpeed * Time.deltaTime);
+            }
+            else
+            {
+                speed = Mathf.Lerp(speed, walkSpeed, sprintTransitSpeed * Time.deltaTime);
+            }
+
+            movementVector *= speed;
         }
 
         movementVector.y = VerticalForceCalculation();
@@ -175,7 +193,7 @@ public class Agent : NetworkBehaviour
 
     private void Turn()
     {
-        if (GameInput.Instance.GetMovementDirection().magnitude > 0)
+        if (GameInput.Instance.MovementDirection.magnitude > 0)
         {
             Vector3 currentLookDirection = characterController.velocity.normalized;
             currentLookDirection.y = 0;

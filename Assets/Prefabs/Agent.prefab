@@ -57,9 +57,9 @@ CharacterController:
   serializedVersion: 3
   m_Height: 2
   m_Radius: 0.5
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.03
+  m_SlopeLimit: 30
+  m_StepOffset: 0.5
+  m_SkinWidth: 0.01
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &4069073292879831233
@@ -148,6 +148,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Agent
   ShowTopMostFoldoutHeaderGroup: 1
   walkSpeed: 6
+  sprintSpeed: 12
+  sprintTransitSpeed: 8
   turningSpeed: 5
   jumpHeight: 3
   coyoteJumpTime: 0.05

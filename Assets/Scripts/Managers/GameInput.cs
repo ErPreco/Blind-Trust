@@ -20,6 +20,8 @@ public class GameInput : MonoBehaviour
     private static GameInput instance;
 
     public event EventHandler OnJumpPerformed;
+    public Vector3 MovementDirection => GetMovementDirection();
+    public bool IsSprinting { get; private set; }
 
     private InputActions inputActions;
 
@@ -29,6 +31,8 @@ public class GameInput : MonoBehaviour
         inputActions.Player.Enable();
 
         inputActions.Player.Jump.performed += Jump_Performed;
+        inputActions.Player.Sprint.performed += Sprint_Performed;
+        inputActions.Player.Sprint.canceled += Sprint_Canceled;
     }
 
     private void Jump_Performed(InputAction.CallbackContext _context)
@@ -36,7 +40,17 @@ public class GameInput : MonoBehaviour
         OnJumpPerformed?.Invoke(this, EventArgs.Empty);
     }
 
-    public Vector3 GetMovementDirection()
+    private void Sprint_Performed(InputAction.CallbackContext _context)
+    {
+        IsSprinting = true;
+    }
+
+    private void Sprint_Canceled(InputAction.CallbackContext _context)
+    {
+        IsSprinting = false;
+    }
+
+    private Vector3 GetMovementDirection()
     {
         Vector2 inputDirection = inputActions.Player.Move.ReadValue<Vector2>();
         return new(inputDirection.x, 0, inputDirection.y);
@@ -44,6 +58,10 @@ public class GameInput : MonoBehaviour
 
     void OnDisable()
     {
+        inputActions.Player.Disable();
+
         inputActions.Player.Jump.performed -= Jump_Performed;
+        inputActions.Player.Sprint.performed -= Sprint_Performed;
+        inputActions.Player.Sprint.canceled -= Sprint_Canceled;
     }
 }
