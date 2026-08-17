@@ -2,23 +2,8 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 
-public class GameManager : NetworkBehaviour
+public class GameManager : NetworkSingleton<GameManager>
 {
-    public static GameManager Instance
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = FindFirstObjectByType<GameManager>();
-            }
-
-            return instance;
-        }
-    }
-
-    private static GameManager instance;
-
     [SerializeField]
     private NetworkObject agentPrefab;
     [SerializeField]

@@ -2,23 +2,8 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class GameInput : MonoBehaviour
+public class GameInput : Singleton<GameInput>
 {
-    public static GameInput Instance
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = FindFirstObjectByType<GameInput>();
-            }
-
-            return instance;
-        }
-    }
-
-    private static GameInput instance;
-
     public event EventHandler OnJumpPerformed;
     public Vector3 MovementDirection => GetMovementDirection();
     public bool IsSprinting { get; private set; }
