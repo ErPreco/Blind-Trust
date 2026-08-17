@@ -24,6 +24,7 @@ public class MenuUI : MonoBehaviour
     {
         hostButton.onClick.AddListener(HostButtonPressed);
         clientButton.onClick.AddListener(ClientButtonPressed);
+        codeInputField.onEndEdit.AddListener(OnCodeInserted);
     }
 
     void Start()
@@ -38,13 +39,19 @@ public class MenuUI : MonoBehaviour
     {
         if (RelayManager.Instance.IsRelayEnabled)
         {
-            await RelayManager.Instance.SetupRelay();
+            RelayHostData relayHostData = await RelayManager.Instance.SetupRelay();
+            waitingText.text = string.Format(waitingText.text, relayHostData.JoinCode);
+        }
+        else
+        {
+            waitingText.text = "Waiting for another player...";
         }
 
         NetworkManager.Singleton.StartHost();
 
         hostButton.interactable = false;
         clientButton.interactable = false;
+        codeInputField.interactable = false;
         waitingText.gameObject.SetActive(true);
     }
 
@@ -59,6 +66,12 @@ public class MenuUI : MonoBehaviour
         panel.SetActive(false);
 
         OnPlayerAsClientStarted?.Invoke(this, EventArgs.Empty);
+    }
+
+
+    private void OnCodeInserted(string _)
+    {
+        ClientButtonPressed();
     }
 
     private void NetworkManager_OnConnectionEvent(NetworkManager _networkManager, ConnectionEventData _data)
@@ -76,5 +89,6 @@ public class MenuUI : MonoBehaviour
     {
         hostButton.onClick.RemoveListener(HostButtonPressed);
         clientButton.onClick.RemoveListener(ClientButtonPressed);
+        codeInputField.onEndEdit.RemoveListener(OnCodeInserted);
     }
 }
