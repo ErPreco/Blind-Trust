@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class GameManager : NetworkSingleton<GameManager>
 {
+    public event EventHandler OnGameStarted;
     public event EventHandler OnWinConditionMet;
 
     [SerializeField]
@@ -19,12 +20,19 @@ public class GameManager : NetworkSingleton<GameManager>
 
     private void MenuUI_OnHostStarted(object _sender, EventArgs _event)
     {
-        SpawnAgent();
+        StartGame();
     }
 
     private void MenuUI_OnClientStarted(object _sender, EventArgs _event)
     {
+        StartGame();
+    }
+
+    private void StartGame()
+    {
         SpawnAgent();
+
+        OnGameStarted?.Invoke(this, EventArgs.Empty);
     }
 
     private void SpawnAgent()
