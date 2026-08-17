@@ -10,8 +10,8 @@ public class CameraBrain : MonoBehaviour
 
     void OnEnable()
     {
-        menuUI.OnHostStarted += MenuUI_GameStarted;
-        menuUI.OnClientStarted += MenuUI_GameStarted;
+        menuUI.OnPlayerAsHostStarted += MenuUI_GameStarted;
+        menuUI.OnPlayerAsClientStarted += MenuUI_GameStarted;
     }
 
     void Start()
@@ -26,7 +26,7 @@ public class CameraBrain : MonoBehaviour
 
     void OnDisable()
     {
-        menuUI.OnHostStarted -= MenuUI_GameStarted;
-        menuUI.OnClientStarted -= MenuUI_GameStarted;
+        menuUI.OnPlayerAsHostStarted -= MenuUI_GameStarted;
+        menuUI.OnPlayerAsClientStarted -= MenuUI_GameStarted;
     }
 }

@@ -12,8 +12,8 @@ public class PlatformsManager : MonoBehaviour
 
     void OnEnable()
     {
-        menuUI.OnHostStarted += MenuUI_OnHostStarted;
-        menuUI.OnClientStarted += MenuUI_OnClientStarted;
+        menuUI.OnPlayerAsHostStarted += MenuUI_OnHostStarted;
+        menuUI.OnPlayerAsClientStarted += MenuUI_OnClientStarted;
     }
 
     private void MenuUI_OnHostStarted(object _sender, EventArgs _event)
@@ -48,7 +48,7 @@ public class PlatformsManager : MonoBehaviour
 
     void OnDisable()
     {
-        menuUI.OnHostStarted -= MenuUI_OnHostStarted;
-        menuUI.OnClientStarted -= MenuUI_OnClientStarted;
+        menuUI.OnPlayerAsHostStarted -= MenuUI_OnHostStarted;
+        menuUI.OnPlayerAsClientStarted -= MenuUI_OnClientStarted;
     }
 }

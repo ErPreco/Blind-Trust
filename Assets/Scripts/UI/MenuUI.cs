@@ -1,12 +1,13 @@
 using System;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class MenuUI : MonoBehaviour
 {
-    public event EventHandler OnHostStarted;
-    public event EventHandler OnClientStarted;
+    public event EventHandler OnPlayerAsHostStarted;
+    public event EventHandler OnPlayerAsClientStarted;
 
     [SerializeField]
     private GameObject panel;
@@ -14,6 +15,8 @@ public class MenuUI : MonoBehaviour
     private Button hostButton;
     [SerializeField]
     private Button clientButton;
+    [SerializeField]
+    private TMP_Text waitingText;
 
     void OnEnable()
     {
@@ -23,15 +26,19 @@ public class MenuUI : MonoBehaviour
 
     void Start()
     {
+        NetworkManager.Singleton.OnConnectionEvent += NetworkManager_OnConnectionEvent;
+
         panel.SetActive(true);
+        waitingText.gameObject.SetActive(false);
     }
 
     private void HostButtonPressed()
     {
         NetworkManager.Singleton.StartHost();
-        panel.SetActive(false);
 
-        OnHostStarted?.Invoke(this, EventArgs.Empty);
+        hostButton.interactable = false;
+        clientButton.interactable = false;
+        waitingText.gameObject.SetActive(true);
     }
 
     private void ClientButtonPressed()
@@ -39,7 +46,18 @@ public class MenuUI : MonoBehaviour
         NetworkManager.Singleton.StartClient();
         panel.SetActive(false);
 
-        OnClientStarted?.Invoke(this, EventArgs.Empty);
+        OnPlayerAsClientStarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void NetworkManager_OnConnectionEvent(NetworkManager _networkManager, ConnectionEventData _data)
+    {
+        if (_data.EventType == ConnectionEvent.PeerConnected)
+        {
+            // The second player connected to the host
+            panel.SetActive(false);
+
+            OnPlayerAsHostStarted?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     void OnDisable()
