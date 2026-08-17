@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GameManager : NetworkSingleton<GameManager>
 {
+    public event EventHandler OnWinConditionMet;
+
     [SerializeField]
     private NetworkObject agentPrefab;
     [SerializeField]
@@ -30,6 +32,11 @@ public class GameManager : NetworkSingleton<GameManager>
         if (!IsServer) return;
 
         Instantiate(agentPrefab).GetComponent<NetworkObject>().Spawn();
+    }
+
+    public void WinConditionMet()
+    {
+        OnWinConditionMet?.Invoke(this, EventArgs.Empty);
     }
 
     void OnDisable()

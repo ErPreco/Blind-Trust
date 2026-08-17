@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Platform : MonoBehaviour
+public class ColoredPlatform : MonoBehaviour
 {
     [SerializeField]
     private GameObject visuals;

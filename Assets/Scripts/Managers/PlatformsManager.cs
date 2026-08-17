@@ -32,7 +32,7 @@ public class PlatformsManager : MonoBehaviour
     {
         foreach (Transform child in _parent)
         {
-            Platform platform = child.GetComponent<Platform>();
+            ColoredPlatform platform = child.GetComponent<ColoredPlatform>();
             platform.Show();
         }
     }
@@ -41,7 +41,7 @@ public class PlatformsManager : MonoBehaviour
     {
         foreach (Transform child in _parent)
         {
-            Platform platform = child.GetComponent<Platform>();
+            ColoredPlatform platform = child.GetComponent<ColoredPlatform>();
             platform.Hide();
         }
     }

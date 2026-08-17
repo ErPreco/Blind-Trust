@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class PlatformColliderFitter : MonoBehaviour
 {
+    public Vector3 Center => cube.position;
+    public Vector3 Size => cube.localScale;
+
     [SerializeField]
     private Transform cube;
 
