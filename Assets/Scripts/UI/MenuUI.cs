@@ -16,6 +16,8 @@ public class MenuUI : MonoBehaviour
     [SerializeField]
     private Button clientButton;
     [SerializeField]
+    private TMP_InputField codeInputField;
+    [SerializeField]
     private TMP_Text waitingText;
 
     void OnEnable()
@@ -32,8 +34,13 @@ public class MenuUI : MonoBehaviour
         waitingText.gameObject.SetActive(false);
     }
 
-    private void HostButtonPressed()
+    private async void HostButtonPressed()
     {
+        if (RelayManager.Instance.IsRelayEnabled)
+        {
+            await RelayManager.Instance.SetupRelay();
+        }
+
         NetworkManager.Singleton.StartHost();
 
         hostButton.interactable = false;
@@ -41,8 +48,13 @@ public class MenuUI : MonoBehaviour
         waitingText.gameObject.SetActive(true);
     }
 
-    private void ClientButtonPressed()
+    private async void ClientButtonPressed()
     {
+        if (RelayManager.Instance.IsRelayEnabled && !string.IsNullOrEmpty(codeInputField.text))
+        {
+            await RelayManager.Instance.JoinRelay(codeInputField.text);
+        }
+
         NetworkManager.Singleton.StartClient();
         panel.SetActive(false);
 
