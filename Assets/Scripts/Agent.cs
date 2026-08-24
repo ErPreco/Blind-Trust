@@ -40,6 +40,7 @@ public class Agent : NetworkBehaviour
     private CharacterController characterController;
     private bool canMove;
     private bool isMovementRequestSent;
+    private bool isMovementRequestAckReceived;
     private float gravityMagnitude;
     private float speed;
     private float verticalVelocity;
@@ -91,6 +92,7 @@ public class Agent : NetworkBehaviour
         // The other player acknowledged the request, so allow control on agent
         ChangeOwnershipRpc(NetworkManager.Singleton.LocalClientId, true);
 
+        isMovementRequestAckReceived = true;
         canMove = true;
     }
 
@@ -162,10 +164,13 @@ public class Agent : NetworkBehaviour
                 RequestMovementRpc();
             }
         }
-        else if (isMovementRequestSent)
+        else if (isMovementRequestSent && isMovementRequestAckReceived)
         {
             // The player has just released the agent control, so notify the other player
+            // NOTE: it may happen to release the agent before receiving the movement ACK (a key is pressed very fast),
+            //       so wait until the ACK arrives to let the player release the agent
             isMovementRequestSent = false;
+            isMovementRequestAckReceived = false;
             canMove = false;
             ReleaseMovementRpc();
         }
