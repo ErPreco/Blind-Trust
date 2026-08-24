@@ -5,13 +5,11 @@ public class CameraBrain : MonoBehaviour
 {
     [SerializeField]
     private Transform cameraOrigin;
-    [SerializeField]
-    private MenuUI menuUI;
 
     void OnEnable()
     {
-        menuUI.OnPlayerAsHostStarted += MenuUI_GameStarted;
-        menuUI.OnPlayerAsClientStarted += MenuUI_GameStarted;
+        GameInput.Instance.OnMenuPerformed += GameInput_OnMenuPerformed;
+        GameManager.Instance.OnGameStarted += GameManager_OnGameStarted;
     }
 
     void Start()
@@ -19,14 +17,18 @@ public class CameraBrain : MonoBehaviour
         transform.SetPositionAndRotation(cameraOrigin.position, cameraOrigin.rotation);
     }
 
-    private void MenuUI_GameStarted(object _sender, EventArgs _event)
+    private void GameInput_OnMenuPerformed(object _sender, GameInput.OnMenuPerformedEventArgs _event)
+    {
+        Cursor.lockState = _event.IsMenuOpened ? CursorLockMode.None : CursorLockMode.Locked;
+    }
+
+    private void GameManager_OnGameStarted(object _sender, EventArgs _event)
     {
         Cursor.lockState = CursorLockMode.Locked;
     }
 
     void OnDisable()
     {
-        menuUI.OnPlayerAsHostStarted -= MenuUI_GameStarted;
-        menuUI.OnPlayerAsClientStarted -= MenuUI_GameStarted;
+        GameInput.Instance.OnMenuPerformed -= GameInput_OnMenuPerformed;
     }
 }

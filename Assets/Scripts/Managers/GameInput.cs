@@ -5,10 +5,16 @@ using UnityEngine.InputSystem;
 public class GameInput : Singleton<GameInput>
 {
     public event EventHandler OnJumpPerformed;
+    public event EventHandler<OnMenuPerformedEventArgs> OnMenuPerformed;
+    public class OnMenuPerformedEventArgs : EventArgs
+    {
+        public bool IsMenuOpened;
+    }
     public Vector3 MovementDirection => GetMovementDirection();
     public bool IsSprinting { get; private set; }
 
     private InputActions inputActions;
+    private bool isMenuOpened;
 
     void OnEnable()
     {
@@ -18,6 +24,7 @@ public class GameInput : Singleton<GameInput>
         inputActions.Player.Jump.performed += Jump_Performed;
         inputActions.Player.Sprint.performed += Sprint_Performed;
         inputActions.Player.Sprint.canceled += Sprint_Canceled;
+        inputActions.Player.Menu.performed += Menu_Performed;
     }
 
     private void Jump_Performed(InputAction.CallbackContext _context)
@@ -35,6 +42,14 @@ public class GameInput : Singleton<GameInput>
         IsSprinting = false;
     }
 
+    private void Menu_Performed(InputAction.CallbackContext _context)
+    {
+        isMenuOpened = !isMenuOpened;
+        OnMenuPerformed?.Invoke(this, new OnMenuPerformedEventArgs
+        {
+            IsMenuOpened = isMenuOpened
+        });
+    }
     private Vector3 GetMovementDirection()
     {
         Vector2 inputDirection = inputActions.Player.Move.ReadValue<Vector2>();
@@ -48,5 +63,6 @@ public class GameInput : Singleton<GameInput>
         inputActions.Player.Jump.performed -= Jump_Performed;
         inputActions.Player.Sprint.performed -= Sprint_Performed;
         inputActions.Player.Sprint.canceled -= Sprint_Canceled;
+        inputActions.Player.Menu.performed -= Menu_Performed;
     }
 }
