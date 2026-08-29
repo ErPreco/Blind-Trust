@@ -25,13 +25,13 @@ A multiplayer, cooperative, 3D platformer game, in which 2 players control the s
 
 Once a player press a key in order to move the agent, a simple handshake protocol is performed as follows.
 
-- <span style="color: blue">**Blue**</span> - movement request
+- $\textcolor{blue}{\textbf{\textsf{Blue}}}$ - movement request
 
-- <span style="color: red">**Red**</span> - movement request ACK
+- $\textcolor{red}{\textbf{\textsf{Red}}}$ - movement request ACK
 
-- <span style="color: green">**Green**</span> - change ownership and set the `movementHandler` NetworkVariable (to the server)
+- $\textcolor{green}{\textbf{\textsf{Green}}}$ - change ownership and set the `movementHandler` NetworkVariable (to the server)
 
-<div align=center style="margin: 1.5em 0 2em">
+<div align=center>
   <img src="./Resources/movement-diagram.png"></img>
 </div>
 
@@ -45,13 +45,13 @@ If the player was too fast to press and release a key to move the agent, it was 
 
 The movement is managed via the Unity `CharacterController` component, hence the vertical velocity is manually calculated every frame. Once a player decides to jump, it sends the request to the server and the "jump message" is broadcasted, as shown in the following diagram.
 
-- <span style="color: blue">**Blue**</span> - jump request (to the server)
+- $\textcolor{blue}{\textbf{\textsf{Blue}}}$ - jump request (to the server)
 
-- <span style="color: green">**Green**</span> - change ownership
+- $\textcolor{green}{\textbf{\textsf{Green}}}$ - change ownership
 
-- <span style="color: orange">**Orange**</span> - broadcast jump message
+- $\textcolor{orange}{\textbf{\textsf{Orange}}}$ - broadcast jump message
 
-<div align=center style="margin: 1.5em 0 2em">
+<div align=center>
   <img src="./Resources/jump-diagram.png"></img>
 </div>
 
