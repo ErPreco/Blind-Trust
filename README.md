@@ -18,3 +18,42 @@ A multiplayer, cooperative, 3D platformer game, in which 2 players control the s
 ### Unity Relay Service
 
 [Unity Relay Service](https://docs.unity.com/en-us/relay) is needed to ensure a remote connection among the players: the host sets up the relay service, receiving a code that the other client has to use to join the server.
+
+<h2 align=center>Agent coordination</h2>
+
+### Movement
+
+Once a player press a key in order to move the agent, a simple handshake protocol is performed as follows.
+
+- <span style="color: blue">**Blue**</span> - movement request
+
+- <span style="color: red">**Red**</span> - movement request ACK
+
+- <span style="color: green">**Green**</span> - change ownership and set the `movementHandler` NetworkVariable (to the server)
+
+<div align=center style="margin: 1.5em 0 2em">
+  <img src="./Resources/movement-diagram.png"></img>
+</div>
+
+In case players send the request at the same time, the host has higher priority and will drop the client's request.
+
+When the handler release the movement, it just notifies the server to reset the `movementHandler` NetworkVariable to `None`.
+
+If the player was too fast to press and release a key to move the agent, it was possible that the release protocol completed before the movement protocol (due to network latency). To avoid that, a safety check is introduced, which does not allow the release if the request has not yet been concluded.
+
+### Jump
+
+The movement is managed via the Unity `CharacterController` component, hence the vertical velocity is manually calculated every frame. Once a player decides to jump, it sends the request to the server and the "jump message" is broadcasted, as shown in the following diagram.
+
+- <span style="color: blue">**Blue**</span> - jump request (to the server)
+
+- <span style="color: green">**Green**</span> - change ownership
+
+- <span style="color: orange">**Orange**</span> - broadcast jump message
+
+<div align=center style="margin: 1.5em 0 2em">
+  <img src="./Resources/jump-diagram.png"></img>
+</div>
+
+> [!NOTE]\
+> Since the jump is instantaneous, no ACK is needed (at worst the same velocity will be overwritten). Moreover, the `movementHandler` NetworkVariable is not changed for the same reason, and so one player may jump while the other player move the agent in the air.
