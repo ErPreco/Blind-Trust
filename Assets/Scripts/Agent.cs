@@ -65,6 +65,13 @@ public class Agent : NetworkBehaviour
 
     void Update()
     {
+        if (GameManager.Instance.IsGamePaused)
+        {
+            Vector3 movementVector = new(0, VerticalForceCalculation(), 0);
+            characterController.Move(movementVector * Time.deltaTime);
+            return;
+        }
+
         CheckJump();
         Movement();
         Turn();
@@ -72,7 +79,7 @@ public class Agent : NetworkBehaviour
 
     private void Jump_Performed(object _sender, EventArgs _event)
     {
-        if (IsMovementHandlerOtherClient()) return;
+        if (IsMovementHandlerOtherClient() || GameManager.Instance.IsGamePaused) return;
 
         jumpBufferTimer = jumpBufferTime;
     }

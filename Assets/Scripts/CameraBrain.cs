@@ -19,6 +19,8 @@ public class CameraBrain : MonoBehaviour
 
     private void GameInput_OnMenuPerformed(object _sender, GameInput.OnMenuPerformedEventArgs _event)
     {
+        if (!GameManager.Instance.IsGameStarted) return;
+
         Cursor.lockState = _event.IsMenuOpened ? CursorLockMode.None : CursorLockMode.Locked;
     }
 

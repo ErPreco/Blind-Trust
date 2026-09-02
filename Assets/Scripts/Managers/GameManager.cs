@@ -6,33 +6,45 @@ public class GameManager : NetworkSingleton<GameManager>
 {
     public event EventHandler OnGameStarted;
     public event EventHandler OnWinConditionMet;
+    public bool IsGameStarted { get; private set; }
+    public bool IsGamePaused { get; private set; }
 
     [SerializeField]
     private NetworkObject agentPrefab;
     [SerializeField]
     private Transform agentSpawnPoint;
     [SerializeField]
-    private MenuUI menuUI;
+    private ConnectionMenuUI connectionMenuUI;
 
     void OnEnable()
     {
-        menuUI.OnPlayerAsHostStarted += MenuUI_OnHostStarted;
-        menuUI.OnPlayerAsClientStarted += MenuUI_OnClientStarted;
+        connectionMenuUI.OnPlayerAsHostStarted += ConnectionMenuUI_OnHostStarted;
+        connectionMenuUI.OnPlayerAsClientStarted += ConnectionMenuUI_OnClientStarted;
+        GameInput.Instance.OnMenuPerformed += GameInput_OnMenuPerformed;
     }
 
-    private void MenuUI_OnHostStarted(object _sender, EventArgs _event)
+    private void ConnectionMenuUI_OnHostStarted(object _sender, EventArgs _event)
     {
         StartGame();
     }
 
-    private void MenuUI_OnClientStarted(object _sender, EventArgs _event)
+    private void ConnectionMenuUI_OnClientStarted(object _sender, EventArgs _event)
     {
         StartGame();
+    }
+
+    private void GameInput_OnMenuPerformed(object _sender, GameInput.OnMenuPerformedEventArgs _event)
+    {
+        if (IsGameStarted)
+        {
+            IsGamePaused = _event.IsMenuOpened;
+        }
     }
 
     private void StartGame()
     {
         SpawnAgent();
+        IsGameStarted = true;
 
         OnGameStarted?.Invoke(this, EventArgs.Empty);
     }
@@ -51,7 +63,7 @@ public class GameManager : NetworkSingleton<GameManager>
 
     void OnDisable()
     {
-        menuUI.OnPlayerAsHostStarted -= MenuUI_OnHostStarted;
-        menuUI.OnPlayerAsClientStarted -= MenuUI_OnClientStarted;
+        connectionMenuUI.OnPlayerAsHostStarted -= ConnectionMenuUI_OnHostStarted;
+        connectionMenuUI.OnPlayerAsClientStarted -= ConnectionMenuUI_OnClientStarted;
     }
 }

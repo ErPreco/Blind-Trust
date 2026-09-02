@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MenuUI : MonoBehaviour
+public class ConnectionMenuUI : MonoBehaviour
 {
     public event EventHandler OnPlayerAsHostStarted;
     public event EventHandler OnPlayerAsClientStarted;
@@ -19,6 +19,8 @@ public class MenuUI : MonoBehaviour
     private TMP_InputField codeInputField;
     [SerializeField]
     private TMP_Text waitingText;
+    [SerializeField]
+    private TMP_Text emptyCodeText;
 
     void OnEnable()
     {
@@ -33,10 +35,12 @@ public class MenuUI : MonoBehaviour
 
         panel.SetActive(true);
         waitingText.gameObject.SetActive(false);
+        emptyCodeText.gameObject.SetActive(false);
     }
 
     private async void HostButtonPressed()
     {
+        emptyCodeText.gameObject.SetActive(false);
         if (RelayManager.Instance.IsRelayEnabled)
         {
             RelayHostData relayHostData = await RelayManager.Instance.SetupRelay();
@@ -57,8 +61,16 @@ public class MenuUI : MonoBehaviour
 
     private async void ClientButtonPressed()
     {
-        if (RelayManager.Instance.IsRelayEnabled && !string.IsNullOrEmpty(codeInputField.text))
+        if (RelayManager.Instance.IsRelayEnabled)
         {
+            if (string.IsNullOrEmpty(codeInputField.text))
+            {
+                waitingText.gameObject.SetActive(false);
+                emptyCodeText.gameObject.SetActive(true);
+
+                return;
+            }
+
             await RelayManager.Instance.JoinRelay(codeInputField.text);
         }
 
@@ -67,7 +79,6 @@ public class MenuUI : MonoBehaviour
 
         OnPlayerAsClientStarted?.Invoke(this, EventArgs.Empty);
     }
-
 
     private void OnCodeInserted(string _)
     {

@@ -8,21 +8,21 @@ public class PlatformsManager : MonoBehaviour
     [SerializeField]
     private Transform blackPlatforms;
     [SerializeField]
-    private MenuUI menuUI;
+    private ConnectionMenuUI connectionMenuUI;
 
     void OnEnable()
     {
-        menuUI.OnPlayerAsHostStarted += MenuUI_OnHostStarted;
-        menuUI.OnPlayerAsClientStarted += MenuUI_OnClientStarted;
+        connectionMenuUI.OnPlayerAsHostStarted += ConnectionMenuUI_OnHostStarted;
+        connectionMenuUI.OnPlayerAsClientStarted += ConnectionMenuUI_OnClientStarted;
     }
 
-    private void MenuUI_OnHostStarted(object _sender, EventArgs _event)
+    private void ConnectionMenuUI_OnHostStarted(object _sender, EventArgs _event)
     {
         ShowPlatforms(whitePlatforms);
         HidePlatforms(blackPlatforms);
     }
 
-    private void MenuUI_OnClientStarted(object _sender, EventArgs _event)
+    private void ConnectionMenuUI_OnClientStarted(object _sender, EventArgs _event)
     {
         HidePlatforms(whitePlatforms);
         ShowPlatforms(blackPlatforms);
@@ -48,7 +48,7 @@ public class PlatformsManager : MonoBehaviour
 
     void OnDisable()
     {
-        menuUI.OnPlayerAsHostStarted -= MenuUI_OnHostStarted;
-        menuUI.OnPlayerAsClientStarted -= MenuUI_OnClientStarted;
+        connectionMenuUI.OnPlayerAsHostStarted -= ConnectionMenuUI_OnHostStarted;
+        connectionMenuUI.OnPlayerAsClientStarted -= ConnectionMenuUI_OnClientStarted;
     }
 }
