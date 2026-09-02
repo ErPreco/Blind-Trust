@@ -26,9 +26,4 @@ public class CameraBrain : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
     }
-
-    void OnDisable()
-    {
-        GameInput.Instance.OnMenuPerformed -= GameInput_OnMenuPerformed;
-    }
 }

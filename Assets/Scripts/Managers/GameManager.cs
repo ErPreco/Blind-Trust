@@ -10,6 +10,8 @@ public class GameManager : NetworkSingleton<GameManager>
     [SerializeField]
     private NetworkObject agentPrefab;
     [SerializeField]
+    private Transform agentSpawnPoint;
+    [SerializeField]
     private MenuUI menuUI;
 
     void OnEnable()
@@ -39,7 +41,7 @@ public class GameManager : NetworkSingleton<GameManager>
     {
         if (!IsServer) return;
 
-        Instantiate(agentPrefab).GetComponent<NetworkObject>().Spawn();
+        Instantiate(agentPrefab, agentSpawnPoint.position, agentSpawnPoint.rotation).GetComponent<NetworkObject>().Spawn(true);
     }
 
     public void WinConditionMet()

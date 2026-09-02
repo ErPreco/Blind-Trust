@@ -9,15 +9,15 @@ A multiplayer, cooperative, 3D platformer game, in which 2 players control the s
 
 ### Unity3D
 
-[Unity](https://unity.com/) is used as Game Engine (version 6000.3.11f), with the addition of some multiplayer packages.
+[Unity](https://unity.com/) is used as Game Engine (version 6000.3.13f1), with the addition of some multiplayer packages.
 
 ### Netcode for GameObjects
 
-[Netcode for GameObject](https://docs.unity3d.com/Packages/com.unity.netcode.gameobjects@2.13/manual/index.html) is adopted as multiplayer infrastructure. One player must act as the host (server + client), while the other one as a client.
+[Netcode for GameObject](https://docs.unity3d.com/Packages/com.unity.netcode.gameobjects@2.13/manual/index.html) is adopted as multiplayer infrastructure (version 2.13.1). One player must act as the host (server + client), while the other one as a client.
 
 ### Unity Relay Service
 
-[Unity Relay Service](https://docs.unity.com/en-us/relay) is needed to ensure a remote connection among the players: the host sets up the relay service, receiving a code that the other client has to use to join the server.
+[Unity Relay Service](https://docs.unity.com/en-us/relay) is needed to ensure a remote connection among the players: the host sets up the relay service, receiving a code that the other client has to use to join the server. Version 2.3.0 of Multiplayer Services is installed.
 
 <h2 align=center>Agent coordination</h2>
 
@@ -55,5 +55,4 @@ The movement is managed via the Unity `CharacterController` component, hence the
   <img src="./Resources/jump-diagram.png"></img>
 </div>
 
-> [!NOTE]\
-> Since the jump is instantaneous, no ACK is needed (at worst the same velocity will be overwritten). Moreover, the `movementHandler` NetworkVariable is not changed for the same reason, and so one player may jump while the other player move the agent in the air.
+Since the jump is instantaneous, no ACK is needed (at worst the same velocity will be overwritten). Moreover, the `movementHandler` NetworkVariable is not changed for the same reason, and so one player may jump while the other player move the agent in the air.

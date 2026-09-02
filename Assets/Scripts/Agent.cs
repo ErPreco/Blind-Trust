@@ -246,9 +246,4 @@ public class Agent : NetworkBehaviour
         return (IsHost && movementHandler.Value == MovementHandler.Client) ||
             (IsClient && !IsHost && movementHandler.Value == MovementHandler.Host);
     }
-
-    void OnDisable()
-    {
-        GameInput.Instance.OnJumpPerformed -= Jump_Performed;
-    }
 }

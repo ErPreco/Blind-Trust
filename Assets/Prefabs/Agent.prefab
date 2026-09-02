@@ -480,7 +480,7 @@ MonoBehaviour:
       Radius: 6
       Height: 2.25
     Bottom:
-      Radius: 2.5
+      Radius: 3.5
       Height: 0.1
     SplineCurvature: 0.5
   RecenteringTarget: 2
