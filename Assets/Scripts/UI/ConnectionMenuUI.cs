@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using Unity.Netcode;
+using Unity.Services.Relay;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,7 +21,7 @@ public class ConnectionMenuUI : MonoBehaviour
     [SerializeField]
     private TMP_Text waitingText;
     [SerializeField]
-    private TMP_Text emptyCodeText;
+    private TMP_Text invalidCodeText;
 
     private string waitingTextStringFormat;
 
@@ -43,7 +44,7 @@ public class ConnectionMenuUI : MonoBehaviour
 
     private async void HostButtonPressed()
     {
-        emptyCodeText.gameObject.SetActive(false);
+        invalidCodeText.gameObject.SetActive(false);
         if (RelayManager.Instance.IsRelayEnabled)
         {
             RelayHostData relayHostData = await RelayManager.Instance.SetupRelay();
@@ -69,12 +70,22 @@ public class ConnectionMenuUI : MonoBehaviour
             if (string.IsNullOrEmpty(codeInputField.text))
             {
                 waitingText.gameObject.SetActive(false);
-                emptyCodeText.gameObject.SetActive(true);
+                invalidCodeText.gameObject.SetActive(true);
 
                 return;
             }
 
-            await RelayManager.Instance.JoinRelay(codeInputField.text);
+            try
+            {
+                await RelayManager.Instance.JoinRelay(codeInputField.text);
+            }
+            catch (RelayServiceException error)
+            {
+                waitingText.gameObject.SetActive(false);
+                invalidCodeText.gameObject.SetActive(true);
+                Debug.LogWarning($"Failed to join relay with code '{codeInputField.text}': {error.Message}");
+                return;
+            }
         }
 
         NetworkManager.Singleton.StartClient();
@@ -114,7 +125,7 @@ public class ConnectionMenuUI : MonoBehaviour
         codeInputField.text = "";
 
         waitingText.gameObject.SetActive(false);
-        emptyCodeText.gameObject.SetActive(false);
+        invalidCodeText.gameObject.SetActive(false);
     }
 
     void OnDisable()

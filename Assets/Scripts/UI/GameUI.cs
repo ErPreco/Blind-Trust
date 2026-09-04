@@ -17,6 +17,7 @@ public class GameUI : MonoBehaviour
     {
         GameManager.Instance.OnGameStarted += GameManager_OnGameStarted;
         GameManager.Instance.OnWinConditionMet += GameManager_OnWinConditionMet;
+        GameManager.Instance.OnOneClientDisconnected += GameManager_OnOneClientDisconnected;
     }
 
     void Start()
@@ -39,10 +40,18 @@ public class GameUI : MonoBehaviour
     {
         panel.SetActive(true);
         startStopWatch = true;
+        stopWatchValue = 0;
+        stopWatchText.text = string.Format(stopWatchStringFormat, 0, 0);
     }
 
     private void GameManager_OnWinConditionMet(object _sender, EventArgs _event)
     {
+        startStopWatch = false;
+    }
+
+    private void GameManager_OnOneClientDisconnected(object _sender, EventArgs _event)
+    {
+        panel.SetActive(false);
         startStopWatch = false;
     }
 }

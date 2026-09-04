@@ -173,7 +173,7 @@ MonoBehaviour:
   clientButton: {fileID: 1262763854}
   codeInputField: {fileID: 329539641}
   waitingText: {fileID: 12829365}
-  emptyCodeText: {fileID: 60770890}
+  invalidCodeText: {fileID: 60770890}
 --- !u!1 &8109577
 GameObject:
   m_ObjectHideFlags: 0
@@ -444,7 +444,7 @@ GameObject:
   - component: {fileID: 60770891}
   - component: {fileID: 60770890}
   m_Layer: 0
-  m_Name: EmptyCodeText
+  m_Name: InvalidCodeText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -489,7 +489,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Insert a code to join as a client
+  m_text: Invalid code to join as a client
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4205,7 +4205,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '{0} : {1}'
+  m_text: '{0:00} : {1:00}'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
