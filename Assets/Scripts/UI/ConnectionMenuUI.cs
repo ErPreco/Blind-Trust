@@ -22,20 +22,23 @@ public class ConnectionMenuUI : MonoBehaviour
     [SerializeField]
     private TMP_Text emptyCodeText;
 
+    private string waitingTextStringFormat;
+
     void OnEnable()
     {
         hostButton.onClick.AddListener(HostButtonPressed);
         clientButton.onClick.AddListener(ClientButtonPressed);
         codeInputField.onEndEdit.AddListener(OnCodeInserted);
+
+        GameManager.Instance.OnOneClientDisconnected += GameManager_OnOneClientDisconnected;
     }
 
     void Start()
     {
         NetworkManager.Singleton.OnConnectionEvent += NetworkManager_OnConnectionEvent;
 
-        panel.SetActive(true);
-        waitingText.gameObject.SetActive(false);
-        emptyCodeText.gameObject.SetActive(false);
+        waitingTextStringFormat = waitingText.text;
+        ResetPanel();
     }
 
     private async void HostButtonPressed()
@@ -44,7 +47,7 @@ public class ConnectionMenuUI : MonoBehaviour
         if (RelayManager.Instance.IsRelayEnabled)
         {
             RelayHostData relayHostData = await RelayManager.Instance.SetupRelay();
-            waitingText.text = string.Format(waitingText.text, relayHostData.JoinCode);
+            waitingText.text = string.Format(waitingTextStringFormat, relayHostData.JoinCode);
         }
         else
         {
@@ -85,6 +88,11 @@ public class ConnectionMenuUI : MonoBehaviour
         ClientButtonPressed();
     }
 
+    private void GameManager_OnOneClientDisconnected(object _sender, EventArgs _event)
+    {
+        ResetPanel();
+    }
+
     private void NetworkManager_OnConnectionEvent(NetworkManager _networkManager, ConnectionEventData _data)
     {
         if (_data.EventType == ConnectionEvent.PeerConnected)
@@ -94,6 +102,19 @@ public class ConnectionMenuUI : MonoBehaviour
 
             OnPlayerAsHostStarted?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private void ResetPanel()
+    {
+        panel.SetActive(true);
+
+        hostButton.interactable = true;
+        clientButton.interactable = true;
+        codeInputField.interactable = true;
+        codeInputField.text = "";
+
+        waitingText.gameObject.SetActive(false);
+        emptyCodeText.gameObject.SetActive(false);
     }
 
     void OnDisable()

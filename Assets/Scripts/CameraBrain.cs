@@ -10,6 +10,7 @@ public class CameraBrain : MonoBehaviour
     {
         GameInput.Instance.OnMenuPerformed += GameInput_OnMenuPerformed;
         GameManager.Instance.OnGameStarted += GameManager_OnGameStarted;
+        GameManager.Instance.OnOneClientDisconnected += GameManager_OnOneClientDisconnected;
     }
 
     void Start()
@@ -19,13 +20,18 @@ public class CameraBrain : MonoBehaviour
 
     private void GameInput_OnMenuPerformed(object _sender, GameInput.OnMenuPerformedEventArgs _event)
     {
-        if (!GameManager.Instance.IsGameStarted) return;
-
         Cursor.lockState = _event.IsMenuOpened ? CursorLockMode.None : CursorLockMode.Locked;
     }
 
     private void GameManager_OnGameStarted(object _sender, EventArgs _event)
     {
         Cursor.lockState = CursorLockMode.Locked;
+    }
+
+
+    private void GameManager_OnOneClientDisconnected(object _sender, EventArgs _event)
+    {
+        transform.SetPositionAndRotation(cameraOrigin.position, cameraOrigin.rotation);
+        Cursor.lockState = CursorLockMode.None;
     }
 }

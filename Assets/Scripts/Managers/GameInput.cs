@@ -25,6 +25,8 @@ public class GameInput : Singleton<GameInput>
         inputActions.Player.Sprint.performed += Sprint_Performed;
         inputActions.Player.Sprint.canceled += Sprint_Canceled;
         inputActions.Player.Menu.performed += Menu_Performed;
+
+        GameManager.Instance.OnOneClientDisconnected += GameManager_OnOneClientDisconnected;
     }
 
     private void Jump_Performed(InputAction.CallbackContext _context)
@@ -44,16 +46,24 @@ public class GameInput : Singleton<GameInput>
 
     private void Menu_Performed(InputAction.CallbackContext _context)
     {
+        if (!GameManager.Instance.IsGameStarted) return;
+
         isMenuOpened = !isMenuOpened;
         OnMenuPerformed?.Invoke(this, new OnMenuPerformedEventArgs
         {
             IsMenuOpened = isMenuOpened
         });
     }
+
     private Vector3 GetMovementDirection()
     {
         Vector2 inputDirection = inputActions.Player.Move.ReadValue<Vector2>();
         return new(inputDirection.x, 0, inputDirection.y);
+    }
+
+    private void GameManager_OnOneClientDisconnected(object _sender, EventArgs _event)
+    {
+        isMenuOpened = false;
     }
 
     void OnDisable()
