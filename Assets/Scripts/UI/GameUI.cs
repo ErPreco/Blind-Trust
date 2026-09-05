@@ -17,7 +17,7 @@ public class GameUI : MonoBehaviour
     {
         GameManager.Instance.OnGameStarted += GameManager_OnGameStarted;
         GameManager.Instance.OnWinConditionMet += GameManager_OnWinConditionMet;
-        GameManager.Instance.OnOneClientDisconnected += GameManager_OnOneClientDisconnected;
+        GameManager.Instance.OnOnePlayerDisconnected += GameManager_OnOneClientDisconnected;
     }
 
     void Start()

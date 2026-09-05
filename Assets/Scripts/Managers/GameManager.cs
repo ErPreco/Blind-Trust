@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class GameManager : NetworkSingleton<GameManager>
 {
+    public event EventHandler OnClientConnected;
     public event EventHandler OnGameStarted;
     public event EventHandler OnWinConditionMet;
-    public event EventHandler OnOneClientDisconnected;
+    public event EventHandler OnOnePlayerDisconnected;
     public bool IsGameStarted { get; private set; }
     public bool IsGamePaused { get; private set; }
 
@@ -48,9 +49,15 @@ public class GameManager : NetworkSingleton<GameManager>
 
     private void NetworkManager_OnConnectionEvent(NetworkManager _networkManager, ConnectionEventData _data)
     {
-        if (_data.EventType == ConnectionEvent.ClientDisconnected)
+        if (_data.EventType == ConnectionEvent.PeerConnected)
         {
-            // One client disconnected, it might be the clocal client or the other one
+            // Received by the host, the second player (client) connected
+            OnClientConnected?.Invoke(this, EventArgs.Empty);
+        }
+        else if (_data.EventType == ConnectionEvent.ClientDisconnected)
+        {
+            // One client disconnected, it might be the clocal client or the other one,
+            // but in both cases the game has to stop
             IsGameStarted = false;
             IsGamePaused = false;
 
@@ -59,7 +66,7 @@ public class GameManager : NetworkSingleton<GameManager>
                 NetworkManager.Shutdown();
             }
 
-            OnOneClientDisconnected?.Invoke(this, EventArgs.Empty);
+            OnOnePlayerDisconnected?.Invoke(this, EventArgs.Empty);
         }
     }
 

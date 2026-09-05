@@ -10,7 +10,7 @@ public class CameraBrain : MonoBehaviour
     {
         GameInput.Instance.OnMenuPerformed += GameInput_OnMenuPerformed;
         GameManager.Instance.OnGameStarted += GameManager_OnGameStarted;
-        GameManager.Instance.OnOneClientDisconnected += GameManager_OnOneClientDisconnected;
+        GameManager.Instance.OnOnePlayerDisconnected += GameManager_OnOneClientDisconnected;
     }
 
     void Start()

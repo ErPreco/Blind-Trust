@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using TMPro;
 using Unity.Netcode;
 using Unity.Services.Relay;
@@ -21,8 +22,10 @@ public class ConnectionMenuUI : MonoBehaviour
     [SerializeField]
     private TMP_Text waitingText;
     [SerializeField]
-    private TMP_Text invalidCodeText;
+    private TMP_Text errorText;
 
+    private readonly string invalidCodeError = "Invalid code {0} to join as a client";
+    private readonly string relaySetupError = "Error while creating the server";
     private string waitingTextStringFormat;
 
     void OnEnable()
@@ -31,24 +34,35 @@ public class ConnectionMenuUI : MonoBehaviour
         clientButton.onClick.AddListener(ClientButtonPressed);
         codeInputField.onEndEdit.AddListener(OnCodeInserted);
 
-        GameManager.Instance.OnOneClientDisconnected += GameManager_OnOneClientDisconnected;
+        GameManager.Instance.OnClientConnected += GameManager_OnClientConnected;
+        GameManager.Instance.OnOnePlayerDisconnected += GameManager_OnOneClientDisconnected;
     }
 
     void Start()
     {
-        NetworkManager.Singleton.OnConnectionEvent += NetworkManager_OnConnectionEvent;
-
         waitingTextStringFormat = waitingText.text;
         ResetPanel();
     }
 
     private async void HostButtonPressed()
     {
-        invalidCodeText.gameObject.SetActive(false);
+        SetInteractables(false);
+        SetTexts(false);
+
         if (RelayManager.Instance.IsRelayEnabled)
         {
-            RelayHostData relayHostData = await RelayManager.Instance.SetupRelay();
-            waitingText.text = string.Format(waitingTextStringFormat, relayHostData.JoinCode);
+            try
+            {
+                RelayHostData relayHostData = await RelayManager.Instance.SetupRelay();
+                waitingText.text = string.Format(waitingTextStringFormat, relayHostData.JoinCode);
+            }
+            catch (RelayServiceException error)
+            {
+                SetInteractables(true);
+                errorText.gameObject.SetActive(true);
+                errorText.text = relaySetupError;
+                Debug.LogWarning($"Failed to setup the Relay Service: {error.Message}");
+            }
         }
         else
         {
@@ -57,20 +71,23 @@ public class ConnectionMenuUI : MonoBehaviour
 
         NetworkManager.Singleton.StartHost();
 
-        hostButton.interactable = false;
-        clientButton.interactable = false;
-        codeInputField.interactable = false;
+        SetInteractables(false);
         waitingText.gameObject.SetActive(true);
     }
 
     private async void ClientButtonPressed()
     {
+        SetInteractables(false);
+        SetTexts(false);
+
         if (RelayManager.Instance.IsRelayEnabled)
         {
             if (string.IsNullOrEmpty(codeInputField.text))
             {
-                waitingText.gameObject.SetActive(false);
-                invalidCodeText.gameObject.SetActive(true);
+                SetInteractables(true);
+                errorText.gameObject.SetActive(true);
+                errorText.text = string.Format(invalidCodeError, "");
+                errorText.text = Regex.Replace(errorText.text, @"\s+", " ");
 
                 return;
             }
@@ -81,8 +98,9 @@ public class ConnectionMenuUI : MonoBehaviour
             }
             catch (RelayServiceException error)
             {
-                waitingText.gameObject.SetActive(false);
-                invalidCodeText.gameObject.SetActive(true);
+                SetInteractables(true);
+                errorText.gameObject.SetActive(true);
+                errorText.text = string.Format(invalidCodeError, codeInputField.text.ToUpper()).Trim();
                 Debug.LogWarning($"Failed to join relay with code '{codeInputField.text}': {error.Message}");
                 return;
             }
@@ -99,33 +117,39 @@ public class ConnectionMenuUI : MonoBehaviour
         ClientButtonPressed();
     }
 
+    private void GameManager_OnClientConnected(object _sender, EventArgs _event)
+    {
+        panel.SetActive(false);
+
+        OnPlayerAsHostStarted?.Invoke(this, EventArgs.Empty);
+    }
+
     private void GameManager_OnOneClientDisconnected(object _sender, EventArgs _event)
     {
         ResetPanel();
     }
 
-    private void NetworkManager_OnConnectionEvent(NetworkManager _networkManager, ConnectionEventData _data)
+    private void SetInteractables(bool _isActive)
     {
-        if (_data.EventType == ConnectionEvent.PeerConnected)
-        {
-            // The second player connected to the host
-            panel.SetActive(false);
+        hostButton.interactable = _isActive;
+        clientButton.interactable = _isActive;
+        codeInputField.interactable = _isActive;
+    }
 
-            OnPlayerAsHostStarted?.Invoke(this, EventArgs.Empty);
-        }
+    private void SetTexts(bool _isActive)
+    {
+        waitingText.gameObject.SetActive(_isActive);
+        errorText.gameObject.SetActive(_isActive);
     }
 
     private void ResetPanel()
     {
         panel.SetActive(true);
 
-        hostButton.interactable = true;
-        clientButton.interactable = true;
-        codeInputField.interactable = true;
+        SetInteractables(true);
         codeInputField.text = "";
 
-        waitingText.gameObject.SetActive(false);
-        invalidCodeText.gameObject.SetActive(false);
+        SetTexts(false);
     }
 
     void OnDisable()

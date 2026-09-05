@@ -26,7 +26,7 @@ public class GameInput : Singleton<GameInput>
         inputActions.Player.Sprint.canceled += Sprint_Canceled;
         inputActions.Player.Menu.performed += Menu_Performed;
 
-        GameManager.Instance.OnOneClientDisconnected += GameManager_OnOneClientDisconnected;
+        GameManager.Instance.OnOnePlayerDisconnected += GameManager_OnOneClientDisconnected;
     }
 
     private void Jump_Performed(InputAction.CallbackContext _context)

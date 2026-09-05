@@ -17,7 +17,7 @@ public class GameMenuUI : MonoBehaviour
         quitButton.onClick.AddListener(QuitButtonPressed);
 
         GameInput.Instance.OnMenuPerformed += GameInput_OnMenuPerformed;
-        GameManager.Instance.OnOneClientDisconnected += GameManager_OnOneClientDisconnected;
+        GameManager.Instance.OnOnePlayerDisconnected += GameManager_OnOneClientDisconnected;
     }
 
     void Start()
