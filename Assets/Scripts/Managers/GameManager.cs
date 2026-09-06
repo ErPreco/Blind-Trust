@@ -8,6 +8,7 @@ public class GameManager : NetworkSingleton<GameManager>
     public event EventHandler OnGameStarted;
     public event EventHandler OnWinConditionMet;
     public event EventHandler OnOnePlayerDisconnected;
+    public event EventHandler OnPlayerRejected;
     public bool IsGameStarted { get; private set; }
     public bool IsGamePaused { get; private set; }
 
@@ -56,10 +57,24 @@ public class GameManager : NetworkSingleton<GameManager>
         }
         else if (_data.EventType == ConnectionEvent.ClientDisconnected)
         {
+            if (_data.ClientId >= 2)
+            {
+                // From the host POV, the disconnected client was the third one in the room, so actually it was rejected
+                return;
+            }
+
             // One client disconnected, it might be the clocal client or the other one,
             // but in both cases the game has to stop
             IsGameStarted = false;
             IsGamePaused = false;
+
+            if (_data.ClientId == 0 && !NetworkManager.IsServer)
+            {
+                // From the rejected client POV, it gets ID 0 but it is not the server
+                OnOnePlayerDisconnected?.Invoke(this, EventArgs.Empty);
+                OnPlayerRejected?.Invoke(this, EventArgs.Empty);
+                return;
+            }
 
             if (_data.ClientId != NetworkManager.Singleton.LocalClientId)
             {

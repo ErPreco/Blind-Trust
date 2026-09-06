@@ -14,6 +14,7 @@ public class PlatformsManager : MonoBehaviour
     {
         connectionMenuUI.OnPlayerAsHostStarted += ConnectionMenuUI_OnHostStarted;
         connectionMenuUI.OnPlayerAsClientStarted += ConnectionMenuUI_OnClientStarted;
+        GameManager.Instance.OnOnePlayerDisconnected += GameManager_OnOnePlayerDisconnected;
     }
 
     private void ConnectionMenuUI_OnHostStarted(object _sender, EventArgs _event)
@@ -25,6 +26,12 @@ public class PlatformsManager : MonoBehaviour
     private void ConnectionMenuUI_OnClientStarted(object _sender, EventArgs _event)
     {
         HidePlatforms(whitePlatforms);
+        ShowPlatforms(blackPlatforms);
+    }
+
+    private void GameManager_OnOnePlayerDisconnected(object _sender, EventArgs _event)
+    {
+        ShowPlatforms(whitePlatforms);
         ShowPlatforms(blackPlatforms);
     }
 

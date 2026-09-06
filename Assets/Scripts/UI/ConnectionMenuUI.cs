@@ -24,8 +24,9 @@ public class ConnectionMenuUI : MonoBehaviour
     [SerializeField]
     private TMP_Text errorText;
 
-    private readonly string invalidCodeError = "Invalid code {0} to join as a client";
     private readonly string relaySetupError = "Error while creating the server";
+    private readonly string invalidCodeError = "Invalid code {0} to join as a client";
+    private readonly string fullRoomError = "The room already counts 2 players";
     private string waitingTextStringFormat;
 
     void OnEnable()
@@ -36,6 +37,7 @@ public class ConnectionMenuUI : MonoBehaviour
 
         GameManager.Instance.OnClientConnected += GameManager_OnClientConnected;
         GameManager.Instance.OnOnePlayerDisconnected += GameManager_OnOneClientDisconnected;
+        GameManager.Instance.OnPlayerRejected += GameManager_OnPlayerRejected;
     }
 
     void Start()
@@ -127,6 +129,13 @@ public class ConnectionMenuUI : MonoBehaviour
     private void GameManager_OnOneClientDisconnected(object _sender, EventArgs _event)
     {
         ResetPanel();
+    }
+
+    private void GameManager_OnPlayerRejected(object _sender, EventArgs _event)
+    {
+        ResetPanel();
+        errorText.gameObject.SetActive(true);
+        errorText.text = fullRoomError;
     }
 
     private void SetInteractables(bool _isActive)

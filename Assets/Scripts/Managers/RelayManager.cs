@@ -15,9 +15,31 @@ public class RelayManager : Singleton<RelayManager>
 
     [SerializeField]
     private string environment = "production";
-
     [SerializeField]
     private int maxNumberOfConnections = 10;
+
+    void Start()
+    {
+        NetworkManager.Singleton.NetworkConfig.ConnectionApproval = true;
+        NetworkManager.Singleton.ConnectionApprovalCallback += ApprovalCheck;
+    }
+
+    private void ApprovalCheck(NetworkManager.ConnectionApprovalRequest _request, NetworkManager.ConnectionApprovalResponse _response)
+    {
+        int currentPlayerCount = NetworkManager.Singleton.ConnectedClientsIds.Count;
+
+        if (currentPlayerCount >= 2)
+        {
+            _response.Approved = false;
+            _response.Reason = "Room is full";
+        }
+        else
+        {
+            _response.Approved = true;
+        }
+
+        _response.Pending = false;
+    }
 
     public async Task<RelayHostData> SetupRelay()
     {
