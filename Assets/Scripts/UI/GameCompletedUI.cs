@@ -9,6 +9,7 @@ public class GameCompletedUI : MonoBehaviour
     void OnEnable()
     {
         GameManager.Instance.OnWinConditionMet += GameManager_OnWinConditionMet;
+        GameManager.Instance.OnOnePlayerDisconnected += GameManager_OnOnePlayerDisconnected;
     }
 
     void Start()
@@ -19,5 +20,10 @@ public class GameCompletedUI : MonoBehaviour
     private void GameManager_OnWinConditionMet(object _sender, EventArgs _event)
     {
         panel.SetActive(true);
+    }
+
+    private void GameManager_OnOnePlayerDisconnected(object _sender, EventArgs _event)
+    {
+        panel.SetActive(false);
     }
 }

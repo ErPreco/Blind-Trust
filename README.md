@@ -5,6 +5,8 @@ A multiplayer, cooperative, 3D platformer game, in which 2 players control the s
 > [!NOTE]\
 > This is a very small project mainly done for the sake of experimentation in multiplayer games in Unity.
 
+Check it out on [itch.io](https://aprecoma.itch.io/blind-trust).
+
 <h2 align=center>Technologies</h2>
 
 ### Unity3D
@@ -56,3 +58,27 @@ The movement is managed via the Unity `CharacterController` component, hence the
 </div>
 
 Since the jump is instantaneous, no ACK is needed (at worst the same velocity will be overwritten). Moreover, the `movementHandler` NetworkVariable is not changed for the same reason, and so one player may jump while the other player move the agent in the air.
+
+<h2 align=center>Player disconnection</h2>
+
+The disconnection system is managed leveraging `NetworkManager` methods and events, as shown in the following diagram.
+
+- $\textcolor{green}{\textbf{\textsf{Green}}}$ - local disconnection event
+
+- $\textcolor{blue}{\textbf{\textsf{Blue}}}$ - agent despawn request (to the server)
+
+- $\textcolor{red}{\textbf{\textsf{Red}}}$ - actual client shutdown using `NetworkManager.Shutdown()` method
+
+- $\textcolor{orange}{\textbf{\textsf{Orange}}}$ - Netcode connection event received of type `ClientDisconnected`
+
+<div align=center>
+  <img src="./Resources/disconnection-diagram.png"></img>
+</div>
+
+Once the Netcode disconnection event is received, the game is reset and the other player that did not generate the event calls the `NetworkManager.Shutdown()` method for a proper disconnection.
+
+In case a third player tries to join, the connection is not approved by the host and the new player disconnects immediately. Since a `ClientDisconnected` event is received, the following 2 checks are performed.
+
+1. Disconnected client ID equal to 2 means a third client has just been disconnected, so it is ignored.
+
+2. Disconnected client ID equal to 0 is given to the disconnected client, as the host, but `NetworkManager.IsServer` is false, so perform the reset.
